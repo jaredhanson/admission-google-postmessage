@@ -1,7 +1,8 @@
-define(['gadgets-rpc',
+define(['./lib/dom',
+        'gadgets-rpc',
         'querystring',
         'class'],
-function(rpc, qs, clazz) {
+function(dom, rpc, qs, clazz) {
   
   /**
    * `Provider` constructor.
@@ -30,7 +31,8 @@ function(rpc, qs, clazz) {
   
   var IDP = IDP = 'https://accounts.google.com/o/oauth2/';
   var PROXY_URL = IDP + 'postmessageRelay';
-  var PROXY_ID = 'oauth2-relay-frame';
+  //var PROXY_ID = 'oauth2-relay-frame';
+  var PROXY_ID = 'oauth2-relay-frame-2';
   var PROXY_READY_CHANNEL = 'oauth2relayReady';
   var FORCE_SECURE_PARAM_VALUE = '1';
   
@@ -47,6 +49,10 @@ function(rpc, qs, clazz) {
     var proxyUrl = PROXY_URL + '?' + qs.stringify(query) + '#' + qs.stringify(frag);
     console.log('PROXY URL: ' + proxyUrl);
     
+    var postmessageRelayFrame = dom.openHiddenFrame(
+            proxyUrl,
+            PROXY_ID);
+    postmessageRelayFrame.tabIndex = '-1';
     
     var rpcToken = rpc.getAuthToken(PROXY_ID);
     var channelName = PROXY_READY_CHANNEL + ':' + rpcToken;
