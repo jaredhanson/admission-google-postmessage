@@ -1,5 +1,5 @@
 define(['./lib/dom',
-        'gadgets-rpc',
+        'gadgets.rpc',
         'querystring',
         'class'],
 function(dom, rpc, qs, clazz) {
@@ -53,6 +53,9 @@ function(dom, rpc, qs, clazz) {
             proxyUrl,
             PROXY_ID);
     postmessageRelayFrame.tabIndex = '-1';
+    
+    rpc.setupReceiver(PROXY_ID);
+    
     
     var rpcToken = rpc.getAuthToken(PROXY_ID);
     var channelName = PROXY_READY_CHANNEL + ':' + rpcToken;

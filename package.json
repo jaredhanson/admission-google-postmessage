@@ -24,7 +24,7 @@
   "main": "main",
   "dependencies": {
     "class": "git://github.com/anchorjs/class.git",
-    "gadgets-rpc": "git://github.com/jaredhanson/js-gadgets-rpc.git"
+    "gadgets.rpc": "git://github.com/jaredhanson/js-gadgets.rpc.git"
   },
   "devDependencies": {
     "express": "3.x.x",
@@ -41,7 +41,7 @@
     "dependencies": {
       "class": "github:anchorjs/class/master",
       "querystring": "github:anchorjs/querystring/master",
-      "gadgets-rpc": "github:jaredhanson/js-gadgets-rpc/master"
+      "gadgets.rpc": "github:jaredhanson/js-gadgets.rpc/master"
     }
   }
 }
