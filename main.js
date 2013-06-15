@@ -4,15 +4,17 @@ define(['./lib/dom',
         'class'],
 function(dom, rpc, qs, clazz) {
   
+  var RELAY_READY_CHANNEL = 'oauth2relayReady';
+  var CALLBACK_CHANNEL = 'oauth2callback';
+  
+  
   /**
    * `Provider` constructor.
    *
    * Examples:
    *
    *     admission.use(new GoogleProvider({
-   *         clientID: '123456789',
-   *         redirectURL: 'http://127.0.0.1:3000/auth/google/redirect',
-   *         responseType: 'token'
+   *         clientID: '123456789'
    *       }));
    *
    * References:
@@ -25,79 +27,84 @@ function(dom, rpc, qs, clazz) {
    */
   function Provider(opts) {
     opts = opts || {};
-    opts.authorizationURL = opts.authorizationURL || 'https://accounts.google.com/o/oauth2/auth';
+    this.name = 'google';
+    this._authorizationURL = opts.authorizationURL || 'https://accounts.google.com/o/oauth2/auth';
+    this._relayURL = opts.relayURL || 'https://accounts.google.com/o/oauth2/postmessageRelay';
     this._clientID = opts.clientID;
     this._scope = opts.scope;
-    this.name = 'google';
+    this._responseType = opts.responseType || 'token';
+    this._relayID = undefined;
   }
   
-  var IDP = IDP = 'https://accounts.google.com/o/oauth2/';
-  var PROXY_URL = IDP + 'postmessageRelay';
-  var AUTH_URL = IDP + 'auth';
-  
-  //var PROXY_ID = 'oauth2-relay-frame';
-  var PROXY_ID = 'oauth2-relay-frame-2';
-  var PROXY_READY_CHANNEL = 'oauth2relayReady';
-  var CALLBACK_CHANNEL = 'oauth2callback';
-  var FORCE_SECURE_PARAM_VALUE = '1';
-  
+  /**
+   * Start the identity provider.
+   *
+   * @return {Provider}
+   * @api public
+   */
   Provider.prototype.start = function() {
+    // TODO: append a random string here to avoid potential conflicts.
+    this._relayID = 'oauth2-relay-frame-2';
+    
     var query = {
       parent: rpc.getOrigin(window.location.href)
     }
     var frag = {
       rpctoken: Math.random(),
-      forcesecure: FORCE_SECURE_PARAM_VALUE
+      forcesecure: '1'
     }
+    var relayUrl = this._relayURL + '?' + qs.stringify(query) + '#' + qs.stringify(frag);
     
+    // Open the OAuth 2.0 postMessage relay in a hidden iframe.
+    dom.openHiddenFrame(relayUrl, this._relayID);
     
-    var proxyUrl = PROXY_URL + '?' + qs.stringify(query) + '#' + qs.stringify(frag);
-    console.log('PROXY URL: ' + proxyUrl);
+    // Setup RPC to communicate with the relay iframe.
+    rpc.setupReceiver(this._relayID);
     
-    var postmessageRelayFrame = dom.openHiddenFrame(
-            proxyUrl,
-            PROXY_ID);
-    postmessageRelayFrame.tabIndex = '-1';
-    
-    rpc.setupReceiver(PROXY_ID);
-    
-    
-    var rpcToken = rpc.getAuthToken(PROXY_ID);
-    var channelName = PROXY_READY_CHANNEL + ':' + rpcToken;
     
     var self = this;
-    rpc.register(channelName, function() {
-      console.log('!!! CHANNEL READY !!!');
-      rpc.unregister(channelName);
+    var rpcToken = rpc.getAuthToken(this._relayID);
+    var relayReadyServiceName = RELAY_READY_CHANNEL + ':' + rpcToken;
+    
+    // Register a handler for the `oauth2relayReady` service.  The relay iframe
+    // will call this this service immediately after it has loaded.
+    rpc.register(relayReadyServiceName, function() {
+      rpc.unregister(relayReadyServiceName);
       
-      
-      var cn = CALLBACK_CHANNEL + ':' + rpcToken;
-      rpc.register(cn, function() {
-        console.log('!!! OAUTH2 CALLBACK');
-      });
-      
-      relayReady(self._getAuthUrl(true));
+      // Register a handler for the `oauth2callback` service.  The relay iframe
+      // will call this service when it receives OAuth 2.0 responses.
+      var callbackServiceName = CALLBACK_CHANNEL + ':' + rpcToken;
+      rpc.register(callbackServiceName, onCallback);
+      onRelayReady();
     });
+    
+    
+    function onRelayReady() {
+      var authUrl = self._getAuthUrl(true);
+      
+      console.log(authUrl);
+      
+      // TODO: Make the initial immediate mode check optional.
+      
+      dom.openHiddenFrame(authUrl, 'immediate-auth-frame');
+    }
+    
+    function onCallback(result) {
+      console.log('!!! OAUTH2 CALLBACK');
+      console.log(result);
+    }
+    
     return this;
-  }
-  
-  function relayReady(authUrl) {
-    console.log('RELAY READY!');
-    
-    // TODO: Close down an open auth window.
-    
-    console.log(authUrl);
-    dom.openHiddenFrame(authUrl, 'immediate-auth-frame').tabIndex = '-1';
   }
   
   Provider.prototype._getAuthUrl = function(immediate) {
     var query = {
-      response_type: 'token',
+      response_type: this._responseType,
       client_id: this._clientID,
       scope: this._scope,
       state: Math.random(),
       redirect_uri: 'postmessage',
-      proxy: PROXY_ID,
+      proxy: this._relayID,
       origin: rpc.getOrigin(window.location.href)
     }
     
@@ -107,7 +114,7 @@ function(dom, rpc, qs, clazz) {
     // TODO: Implement support for additional options.
     query.authuser = 0;
     
-    var authUrl = AUTH_URL + '?' + qs.stringify(query);
+    var authUrl = this._authorizationURL + '?' + qs.stringify(query);
     return authUrl;
   }
   
