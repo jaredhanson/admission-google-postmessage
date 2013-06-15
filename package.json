@@ -40,6 +40,7 @@
   "volo": {
     "dependencies": {
       "class": "github:anchorjs/class/master",
+      "events": "github:anchorjs/events/master",
       "querystring": "github:anchorjs/querystring/master",
       "gadgets.rpc": "github:jaredhanson/js-gadgets.rpc/master"
     }
