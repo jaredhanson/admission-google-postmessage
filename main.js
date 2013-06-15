@@ -1,6 +1,7 @@
-define(['admission-oauth2',
+define(['gadgets-rpc',
+        'querystring',
         'class'],
-function(OAuth2Provider, clazz) {
+function(rpc, qs, clazz) {
   
   /**
    * `Provider` constructor.
@@ -24,52 +25,36 @@ function(OAuth2Provider, clazz) {
   function Provider(opts) {
     opts = opts || {};
     opts.authorizationURL = opts.authorizationURL || 'https://accounts.google.com/o/oauth2/auth';
-    OAuth2Provider.call(this, opts);
     this.name = 'google';
   }
   
-  /**
-   * Inherit from `OAuth2Provider`.
-   */
-  clazz.inherits(Provider, OAuth2Provider);
+  var IDP = IDP = 'https://accounts.google.com/o/oauth2/';
+  var PROXY_URL = IDP + 'postmessageRelay';
+  var PROXY_ID = 'oauth2-relay-frame';
+  var PROXY_READY_CHANNEL = 'oauth2relayReady';
+  var FORCE_SECURE_PARAM_VALUE = '1';
   
-  /**
-   * Retrieve info for `token`.
-   *
-   * @param {String} token
-   * @param {Function} cb
-   * @api protected
-   */
-  Provider.prototype.tokenInfo = function(token, cb) {
-    var url = 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token;
-    var req = ajax.get(url, function(res) {
-      res.on('end', function() {
-        // TODO: Check status code.
-        
-        var json = JSON.parse(res.responseText)
-          , info = {}
-          , profile = {};
-        info.audience = json.audience;
-        profile.id = json.user_id;
-        return cb(null, info, profile);
-      });
+  Provider.prototype.start = function() {
+    var query = {
+      parent: rpc.getOrigin(window.location.href)
+    }
+    var frag = {
+      rpctoken: Math.random(),
+      forcesecure: FORCE_SECURE_PARAM_VALUE
+    }
+    
+    
+    var proxyUrl = PROXY_URL + '?' + qs.stringify(query) + '#' + qs.stringify(frag);
+    console.log('PROXY URL: ' + proxyUrl);
+    
+    
+    var rpcToken = rpc.getAuthToken(PROXY_ID);
+    var channelName = PROXY_READY_CHANNEL + ':' + rpcToken;
+    
+    rpc.register(channelName, function() {
+      
     });
-
-    req.on('error', function(err) {
-      return cb(err);
-    });
-  }
-  
-  /**
-   * Retrieve the user profile from Facebook.
-   *
-   * @param {String} token
-   * @param {Function} cb
-   * @api protected
-   */
-  Provider.prototype.userProfile = function(token, profile, cb) {
-    // TODO: Optionally fetch from API endpoint.
-    return cb(null, profile);
+    return this;
   }
   
   return Provider;

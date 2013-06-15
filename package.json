@@ -24,8 +24,7 @@
   "main": "main",
   "dependencies": {
     "class": "git://github.com/anchorjs/class.git",
-    "postmessage": "git://github.com/anchorjs/postmessage.git",
-    "admission-oauth2": "git://github.com/jaredhanson/admission-oauth2.git"
+    "gadgets-rpc": "git://github.com/jaredhanson/js-gadgets-rpc.git"
   },
   "devDependencies": {
     "express": "3.x.x",
@@ -41,8 +40,8 @@
   "volo": {
     "dependencies": {
       "class": "github:anchorjs/class/master",
-      "postmessage": "github:anchorjs/postmessage/master",
-      "admission-oauth2": "github:jaredhanson/admission-oauth2/master"
+      "querystring": "github:anchorjs/querystring/master",
+      "gadgets-rpc": "github:jaredhanson/js-gadgets-rpc/master"
     }
   }
 }
