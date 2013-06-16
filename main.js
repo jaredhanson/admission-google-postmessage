@@ -88,17 +88,18 @@ function(dom, rpc, qs, Emitter, clazz) {
     
     var self = this;
     var rpcToken = rpc.getAuthToken(this._relayID);
-    var relayReadyServiceName = RELAY_READY_CHANNEL + ':' + rpcToken;
+    var relayReadyChannelName = RELAY_READY_CHANNEL + ':' + rpcToken;
     
-    // Register a handler for the `oauth2relayReady` service.  The relay iframe
-    // will call this this service immediately after it has loaded.
-    rpc.register(relayReadyServiceName, function() {
-      rpc.unregister(relayReadyServiceName);
+    // Register a handler for the `oauth2relayReady` channel.  The relay iframe
+    // will send a message on this channel immediately after it has loaded.
+    rpc.register(relayReadyChannelName, function() {
+      rpc.unregister(relayReadyChannelName);
       
-      // Register a handler for the `oauth2callback` service.  The relay iframe
-      // will call this service when it receives OAuth 2.0 responses.
-      var callbackServiceName = CALLBACK_CHANNEL + ':' + rpcToken;
-      rpc.register(callbackServiceName, onCallback);
+      // Register a handler for the `oauth2callback` channel.  The relay iframe
+      // will send a message on this channel when it receives OAuth 2.0
+      // responses.
+      var callbackChannelName = CALLBACK_CHANNEL + ':' + rpcToken;
+      rpc.register(callbackChannelName, onCallback);
       onRelayReady();
     });
     
