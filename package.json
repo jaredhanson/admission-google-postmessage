@@ -1,14 +1,14 @@
 {
-  "name": "admission-google-postmessage",
+  "name": "admission-google-xdm",
   "version": "0.0.0",
   "description": "Google identity provider for Admission.",
   "keywords": ["login", "signin", "authentication", "security"],
   "repository": {
     "type": "git",
-    "url": "git://github.com/jaredhanson/admission-google-postmessage.git"
+    "url": "git://github.com/jaredhanson/admission-google-xdm.git"
   },
   "bugs": {
-    "url": "http://github.com/jaredhanson/admission-google-postmessage/issues"
+    "url": "http://github.com/jaredhanson/admission-google-xdm/issues"
   },
   "author": {
     "name": "Jared Hanson",
